@@ -1,0 +1,63 @@
+package zm.co.codelabs.utorr
+
+import android.app.*
+import android.content.Intent
+import android.os.Binder
+import android.os.IBinder
+import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.flow.StateFlow
+
+class TorrentService : Service() {
+
+    private val binder = LocalBinder()
+    private lateinit var torrentManager: TorrentManager
+
+    inner class LocalBinder : Binder() {
+        fun getService(): TorrentService = this@TorrentService
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        torrentManager = TorrentManager(this)
+        startForegroundService()
+    }
+
+    private fun startForegroundService() {
+        val channelId = "torrent_channel"
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId, "Torrent Downloads",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Utorr is running")
+            .setSmallIcon(android.R.drawable.stat_sys_download)
+            .build()
+
+        startForeground(1, notification)
+    }
+
+    override fun onBind(intent: Intent?): IBinder = binder
+
+    fun getTorrents(): StateFlow<List<TorrentItem>> = torrentManager.torrents
+
+    fun addMagnet(uri: String) {
+        torrentManager.addMagnet(uri, getExternalFilesDir(null) ?: filesDir)
+    }
+
+    fun addTorrentFile(file: java.io.File) {
+        torrentManager.addTorrentFile(file, getExternalFilesDir(null) ?: filesDir)
+    }
+
+    fun pauseTorrent(id: String) = torrentManager.pauseTorrent(id)
+    fun resumeTorrent(id: String) = torrentManager.resumeTorrent(id)
+    fun removeTorrent(id: String) = torrentManager.removeTorrent(id, true)
+
+    override fun onDestroy() {
+        torrentManager.stop()
+        super.onDestroy()
+    }
+}
