@@ -17,12 +17,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import zm.co.codelabs.utorr.databinding.DialogAddTorrentBinding
-import zm.co.codelabs.utorr.databinding.FragmentFirstBinding
+import zm.co.codelabs.utorr.databinding.FragmentHomeBinding
 import java.io.File
 
-class FirstFragment : Fragment() {
-
-    private var _binding: FragmentFirstBinding? = null
+class HomeFragment : Fragment() {
+    private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
     private var torrentService: TorrentService? = null
@@ -52,7 +51,7 @@ class FirstFragment : Fragment() {
     private lateinit var adapter: TorrentAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentFirstBinding.inflate(inflater, container, false)
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -76,6 +75,7 @@ class FirstFragment : Fragment() {
             torrentService?.getTorrents()?.collectLatest { torrents ->
                 adapter.submitList(torrents)
                 binding.emptyView.visibility = if (torrents.isEmpty()) View.VISIBLE else View.GONE
+                (activity as? MainActivity)?.updatePauseResumeAllMenu(torrents)
             }
         }
     }
@@ -103,6 +103,9 @@ class FirstFragment : Fragment() {
 
         dialog.show()
     }
+
+    fun pauseAll() = torrentService?.pauseAll()
+    fun resumeAll() = torrentService?.resumeAll()
 
     private fun copyUriToFile(uri: Uri): File? {
         return try {

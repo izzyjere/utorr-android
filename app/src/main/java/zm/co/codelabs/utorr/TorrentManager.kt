@@ -86,6 +86,14 @@ class TorrentManager(private val context: Context) {
         handles[id]?.resume()
     }
 
+    fun pauseAll() {
+        handles.values.forEach { it.pause() }
+    }
+
+    fun resumeAll() {
+        handles.values.forEach { it.resume() }
+    }
+
     fun removeTorrent(id: String, deleteFiles: Boolean) {
         handles[id]?.let { handle ->
             val flags = if (deleteFiles) remove_flags_t.from_int(1) else remove_flags_t()
@@ -107,7 +115,7 @@ class TorrentManager(private val context: Context) {
                 uploadSpeed = status.uploadPayloadRate().toLong(),
                 totalSize = status.totalDone() + status.totalWanted(),
                 downloadedSize = status.totalDone(),
-                status = mapStatus(status.state()),
+                status = mapStatus(status),
                 peers = status.numPeers(),
                 seeds = status.numSeeds(),
                 filePath = status.swig().save_path + File.separator + name
@@ -116,8 +124,11 @@ class TorrentManager(private val context: Context) {
         _torrents.value = items
     }
 
-    private fun mapStatus(state: TorrentStatus.State): TorrentItem.Status {
-        return when (state) {
+    private fun mapStatus(status: TorrentStatus): TorrentItem.Status {
+        if (status.flags().eq(torrent_flags_t.from_int(16))) {
+            return TorrentItem.Status.PAUSED
+        }
+        return when (status.state()) {
             TorrentStatus.State.CHECKING_FILES -> TorrentItem.Status.CHECKING
             TorrentStatus.State.DOWNLOADING_METADATA -> TorrentItem.Status.DOWNLOADING
             TorrentStatus.State.DOWNLOADING -> TorrentItem.Status.DOWNLOADING

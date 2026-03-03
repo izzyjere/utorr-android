@@ -60,6 +60,8 @@ class TorrentService : Service() {
 
     fun pauseTorrent(id: String) = torrentManager.pauseTorrent(id)
     fun resumeTorrent(id: String) = torrentManager.resumeTorrent(id)
+    fun pauseAll() = torrentManager.pauseAll()
+    fun resumeAll() = torrentManager.resumeAll()
     fun removeTorrent(id: String) = torrentManager.removeTorrent(id, true)
 
     override fun onDestroy() {

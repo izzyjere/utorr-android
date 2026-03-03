@@ -20,6 +20,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private var isAnyTorrentRunning = false
+    private var isAnyTorrentPresent = false
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -41,13 +43,27 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            if (destination.id == R.id.HomeFragment) {
+                binding.fab.show()
+            } else {
+                binding.fab.hide()
+            }
+        }
+
         binding.fab.setOnClickListener {
             val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
-            val firstFragment = navHostFragment?.childFragmentManager?.fragments?.find { it is FirstFragment } as? FirstFragment
+            val firstFragment = navHostFragment?.childFragmentManager?.fragments?.find { it is HomeFragment } as? HomeFragment
             firstFragment?.showAddTorrentDialog()
         }
 
         requestNotificationPermission()
+    }
+
+    fun updatePauseResumeAllMenu(torrents: List<TorrentItem>) {
+        isAnyTorrentPresent = torrents.isNotEmpty()
+        isAnyTorrentRunning = torrents.any { it.status != TorrentItem.Status.PAUSED }
+        invalidateOptionsMenu()
     }
 
     private fun requestNotificationPermission() {
@@ -63,6 +79,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.menu_main, menu)
+        
+        val pauseResumeItem = menu.findItem(R.id.action_pause_all)
+        pauseResumeItem.isVisible = isAnyTorrentPresent
+        if (isAnyTorrentRunning) {
+            pauseResumeItem.title = getString(R.string.action_pause_all)
+        } else {
+            pauseResumeItem.title = getString(R.string.action_resume_all)
+        }
+        
         return true
     }
 
@@ -70,8 +95,27 @@ class MainActivity : AppCompatActivity() {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+        val navController = findNavController(R.id.nav_host_fragment_content_main)
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
+        val firstFragment = navHostFragment?.childFragmentManager?.fragments?.find { it is HomeFragment } as? HomeFragment
+
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_pause_all -> {
+                if (isAnyTorrentRunning) {
+                    firstFragment?.pauseAll()
+                } else {
+                    firstFragment?.resumeAll()
+                }
+                true
+            }
+            R.id.action_settings -> {
+                navController.navigate(R.id.SettingsFragment)
+                true
+            }
+            R.id.action_about -> {
+                navController.navigate(R.id.AboutFragment)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
