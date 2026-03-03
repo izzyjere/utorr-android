@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "zm.co.codelabs.utorr"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "zm.co.codelabs.utorr"
@@ -45,7 +45,6 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    r
     implementation(libs.libtorrent4j)
     implementation("org.libtorrent4j:libtorrent4j-android-arm:2.1.0-39")
     implementation("org.libtorrent4j:libtorrent4j-android-arm64:2.1.0-39")

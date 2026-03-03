@@ -3,6 +3,7 @@ package zm.co.codelabs.utorr
 import android.app.*
 import android.content.Intent
 import android.os.Binder
+import android.os.Environment
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.flow.StateFlow
@@ -43,7 +44,7 @@ class TorrentService : Service() {
     fun getTorrents(): StateFlow<List<TorrentItem>> = torrentManager.torrents
 
     fun addMagnet(uri: String) {
-        torrentManager.addMagnet(uri, getExternalFilesDir(null) ?: filesDir)
+        torrentManager.addMagnet(uri, getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir)
     }
 
     fun addTorrentFile(file: java.io.File) {
