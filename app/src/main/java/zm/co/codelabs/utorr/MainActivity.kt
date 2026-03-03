@@ -41,8 +41,10 @@ class MainActivity : AppCompatActivity() {
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        binding.fab.setOnClickListener { view ->
-            // FAB listener is handled in FirstFragment
+        binding.fab.setOnClickListener {
+            val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
+            val firstFragment = navHostFragment?.childFragmentManager?.fragments?.find { it is FirstFragment } as? FirstFragment
+            firstFragment?.showAddTorrentDialog()
         }
 
         requestNotificationPermission()

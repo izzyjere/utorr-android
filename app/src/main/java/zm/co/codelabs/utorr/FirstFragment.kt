@@ -69,10 +69,6 @@ class FirstFragment : Fragment() {
             }
         )
         binding.recyclerView.adapter = adapter
-
-        requireActivity().findViewById<View>(R.id.fab).setOnClickListener {
-            showAddTorrentDialog()
-        }
     }
 
     private fun observeTorrents() {
@@ -84,7 +80,7 @@ class FirstFragment : Fragment() {
         }
     }
 
-    private fun showAddTorrentDialog() {
+    fun showAddTorrentDialog() {
         val dialogBinding = DialogAddTorrentBinding.inflate(layoutInflater)
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setView(dialogBinding.root)

@@ -2,8 +2,8 @@
     <string name="app_name">Utorr</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
+    <string name="first_fragment_label">Utorr Downloader</string>
+    <string name="second_fragment_label">Settings</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
 
@@ -43,4 +43,8 @@
         libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
+    <string name="no_downloads_yet">No downloads yet</string>
+    <string name="add_a_torrent_or_magnet_link">Add a torrent or magnet link</string>
+    <string name="action_pause_all">Pause All</string>
+    <string name="action_about">About App</string>
 </resources>

@@ -19,7 +19,7 @@
         android:id="@+id/empty_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No downloads yet"
+        android:text="@string/no_downloads_yet"
         android:textAppearance="?attr/textAppearanceBodyLarge"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
