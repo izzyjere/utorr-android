@@ -2,7 +2,9 @@ package zm.co.codelabs.utorr
 
 import android.app.*
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Binder
+import android.os.Build
 import android.os.Environment
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
@@ -34,9 +36,14 @@ class TorrentService : Service() {
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Utorr is running")
             .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setOngoing(true)
             .build()
 
-        startForeground(1, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(1, notification)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder = binder
