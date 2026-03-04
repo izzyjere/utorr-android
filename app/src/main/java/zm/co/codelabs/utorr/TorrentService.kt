@@ -24,8 +24,9 @@ class TorrentService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        torrentManager = TorrentManager(this)
         settingsManager = SettingsManager(this)
+        val saveDir = File(settingsManager.downloadPath)
+        torrentManager = TorrentManager(this, rootDir = saveDir)
         startForegroundService()
     }
 
@@ -55,13 +56,11 @@ class TorrentService : Service() {
     fun getTorrents(): StateFlow<List<TorrentItem>> = torrentManager.torrents
 
     fun addMagnet(uri: String) {
-        val saveDir = File(settingsManager.downloadPath)
-        torrentManager.addMagnet(uri, saveDir)
+        torrentManager.addMagnet(uri)
     }
 
     fun addTorrentFile(file: java.io.File) {
-        val saveDir = File(settingsManager.downloadPath)
-        torrentManager.addTorrentFile(file, saveDir)
+        torrentManager.addTorrentFile(file)
     }
 
     fun pauseTorrent(id: String) = torrentManager.pauseTorrent(id)

@@ -93,14 +93,17 @@ class TorrentManager(
         }
 
         override fun onError(msg: String?) {
-            // Keep it simple: you can hook this to Logcat or UI later
-            // android.util.Log.e("TorrentManager", msg ?: "unknown engine error")
+            android.util.Log.e("TorrentManager", msg ?: "unknown engine error")
         }
     }
 
     init {
         if (!rootDir.exists()) rootDir.mkdirs()
         if (!sessionDir.exists()) sessionDir.mkdirs()
+        android.util.Log.i("TorrentManager", "rootDir: ${rootDir.absolutePath}")
+        android.util.Log.i("TorrentManager", "sessionDir: ${sessionDir.absolutePath}")
+        android.util.Log.i("TorrentManager", "maxConns: $maxConns")
+
 
         // Start Go engine. It will restore torrents on startup and begin status ticks.
         engine.start(
@@ -113,14 +116,14 @@ class TorrentManager(
     }
 
     /**
-     * Add magnet. The Go engine downloads into the rootDir passed at Start().
+     * Add magnet.
      */
     fun addMagnet(uri: String) {
         engine.addMagnet(uri)
     }
 
     /**
-     * Add .torrent file. We pass bytes to Go (gomobile-friendly).
+     * Add .torrent file.
      */
     fun addTorrentFile(file: File) {
         val bytes = file.readBytes()

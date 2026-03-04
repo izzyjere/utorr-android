@@ -1,5 +1,7 @@
 package utorr
 
+// #cgo LDFLAGS: -static-libstdc++
+import "C"
 import (
 	"bytes"
 	"encoding/json"
@@ -29,6 +31,7 @@ type Status struct {
 }
 
 type StatusList struct{ items []*Status }
+
 func (s *StatusList) Len() int          { return len(s.items) }
 func (s *StatusList) Get(i int) *Status { return s.items[i] }
 

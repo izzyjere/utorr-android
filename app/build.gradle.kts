@@ -9,12 +9,13 @@ plugins {
 
 android {
     namespace = "zm.co.codelabs.utorr"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "zm.co.codelabs.utorr"
         minSdk = 26
-        targetSdk = 35
+        //noinspection EditedTargetSdkVersion
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -40,8 +41,6 @@ android {
 
     buildFeatures { viewBinding = true }
 }
-
-// Allow Gradle to resolve app/libs/*.aar (our gomobile output)
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -53,9 +52,10 @@ dependencies {
 
     implementation(files("libs/utorr.aar"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.10.0")
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -74,8 +74,8 @@ tasks.register("cleanUtorrEngine") {
 
     doLast {
         // Remove the produced AAR
-        val aar = aarOutFile?.asFile
-        if (aar != null && aar.exists()) {
+        val aar = aarOutFile.asFile
+        if (aar.exists()) {
             logger.lifecycle("Deleting: ${aar.absolutePath}")
             aar.delete()
         }
