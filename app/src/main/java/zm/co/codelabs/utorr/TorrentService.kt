@@ -9,7 +9,12 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.io.File
 
 class TorrentService : Service() {
@@ -17,6 +22,9 @@ class TorrentService : Service() {
     private val binder = LocalBinder()
     private lateinit var torrentManager: TorrentManager
     private lateinit var settingsManager: SettingsManager
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var isForeground = false
 
     inner class LocalBinder : Binder() {
         fun getService(): TorrentService = this@TorrentService
@@ -28,10 +36,22 @@ class TorrentService : Service() {
         val saveDir = File(settingsManager.downloadPath)
         val maxConns = settingsManager.maxConns
         torrentManager = TorrentManager(this, rootDir = saveDir, maxConns = maxConns)
-        startForegroundService()
+
+        serviceScope.launch {
+            torrentManager.torrents.collect { list ->
+                val hasDownloading = list.any { it.status == TorrentItem.Status.DOWNLOADING }
+                if (hasDownloading && !isForeground) {
+                    startForegroundService()
+                } else if (!hasDownloading && isForeground) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    isForeground = false
+                }
+            }
+        }
     }
 
     private fun startForegroundService() {
+        isForeground = true
         val channelId = "torrent_channel"
         val channel = NotificationChannel(
             channelId, "Torrent Downloads",
@@ -40,7 +60,7 @@ class TorrentService : Service() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Utorr is running")
+            .setContentTitle("Utorr is downloading")
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setOngoing(true)
             .build()
@@ -71,6 +91,7 @@ class TorrentService : Service() {
     fun removeTorrent(id: String) = torrentManager.removeTorrent(id, true)
 
     override fun onDestroy() {
+        serviceScope.cancel()
         torrentManager.stop()
         super.onDestroy()
     }
