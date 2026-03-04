@@ -63,7 +63,7 @@ dependencies {
 }
 
 
-val engineDir: Directory = layout.projectDirectory.dir("../engine")
+val engineDir: Directory = layout.projectDirectory.dir("../engine/utorr")
 val libsOutDir: Directory = layout.projectDirectory.dir("libs")
 val aarOutFile: RegularFile = libsOutDir.file("utorr.aar")
 
@@ -149,7 +149,7 @@ tasks.register("buildUtorrAar") {
             "-target", "android",
             "-androidapi", android.defaultConfig.minSdk.toString(),
             "-o", aarOutFile.asFile.absolutePath,
-            "./utorr"
+            "."
         )
     }
 }

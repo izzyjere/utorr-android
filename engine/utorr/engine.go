@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	alog "github.com/anacrolix/log"
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/anacrolix/torrent/storage"
@@ -26,6 +25,8 @@ type Status struct {
 	TotalSize   int64
 	Downloaded  int64
 	Peers       int
+	TotalPeers  int
+	Seeds       int
 	State       string // QUEUED, DOWNLOADING, PAUSED, FINISHED, CHECKING
 	SavePath    string
 }
@@ -115,15 +116,6 @@ func (e *Engine) Start(rootDir, sessionDir string, maxConns int, l Listener, deb
 			PieceCompletion: pc,
 		})
 	}
-
-	// Logger (optional)
-	tlog := alog.NewLogger()
-	level := alog.Info
-	if debug {
-		level = alog.Debug
-	}
-	cfg.Logger = tlog.WithDefaultLevel(level)
-
 	cl, err := torrent.NewClient(cfg)
 	if err != nil {
 		return err
@@ -386,6 +378,8 @@ func (e *Engine) emitStatus(now time.Time) {
 			TotalSize:   size,
 			Downloaded:  done,
 			Peers:       st.ActivePeers,
+			TotalPeers:  st.TotalPeers,
+			Seeds:       st.ConnectedSeeders,
 			State:       state,
 			SavePath:    e.rootDir,
 		})
