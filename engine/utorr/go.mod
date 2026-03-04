@@ -2,7 +2,10 @@ module codelabs.co.zm/utorr
 
 go 1.25.0
 
-require github.com/anacrolix/torrent v1.61.0
+require (
+	github.com/anacrolix/torrent v1.61.0
+	go.etcd.io/bbolt v1.3.6
+)
 
 require (
 	github.com/RoaringBitmap/roaring v1.2.3 // indirect
@@ -71,7 +74,6 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/tidwall/btree v1.8.1 // indirect
 	github.com/wlynxg/anet v0.0.5 // indirect
-	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect

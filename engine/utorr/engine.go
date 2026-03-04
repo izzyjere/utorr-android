@@ -14,6 +14,7 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/anacrolix/torrent/storage"
+	"go.etcd.io/bbolt"
 )
 
 type Status struct {
@@ -74,6 +75,8 @@ type Engine struct {
 
 	tickStop chan struct{}
 	maxConns int
+
+	db *bbolt.DB
 }
 
 func NewEngine() *Engine {
@@ -130,6 +133,20 @@ func (e *Engine) Start(rootDir, sessionDir string, maxConns int, l Listener, deb
 	e.tickStop = make(chan struct{})
 	go e.statusLoop()
 
+	// DB
+	dbPath := filepath.Join(sessionDir, "utorr.db")
+	db, err := bbolt.Open(dbPath, 0o600, &bbolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		return err
+	}
+	e.db = db
+
+	// init bucket
+	_ = e.db.Update(func(tx *bbolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("completed"))
+		return err
+	})
+
 	return nil
 }
 
@@ -149,6 +166,10 @@ func (e *Engine) Stop() {
 	}
 	if cl != nil {
 		cl.Close()
+	}
+	if e.db != nil {
+		e.db.Close()
+		e.db = nil
 	}
 }
 
@@ -219,7 +240,13 @@ func (e *Engine) Resume(id string) {
 	e.mu.Unlock()
 
 	if t != nil {
-		t.AllowDataDownload()
+		go func() {
+			<-t.GotInfo()
+			if t.BytesCompleted() < t.Length() && !e.isCompleted(id) {
+				t.DownloadAll()
+			}
+			t.AllowDataDownload()
+		}()
 	}
 	_ = e.setPaused(id, false)
 }
@@ -261,6 +288,7 @@ func (e *Engine) Remove(id string, deleteFiles bool) {
 	e.mu.Unlock()
 
 	_ = e.deleteEntry(id)
+	_ = e.markDeleted(id)
 
 	if t != nil {
 		// best-effort file delete (needs info for exact file list)
@@ -297,7 +325,10 @@ func (e *Engine) attach(id string, t *torrent.Torrent, paused bool) {
 		if paused {
 			t.DisallowDataDownload()
 		} else {
-			t.DownloadAll()
+			// If already completed, don't start download. Just allow data to seeding.
+			if t.BytesCompleted() < t.Length() && !e.isCompleted(id) {
+				t.DownloadAll()
+			}
 			t.AllowDataDownload()
 		}
 		if e.listener != nil {
@@ -366,8 +397,11 @@ func (e *Engine) emitStatus(now time.Time) {
 			state = "PAUSED"
 		} else if size > 0 && done == size {
 			state = "FINISHED"
+			_ = e.markCompleted(id)
 		} else if done > 0 && (size == 0 || done < size) {
 			state = "DOWNLOADING"
+		} else if t.Info() == nil {
+			state = "METADATA"
 		}
 
 		out = append(out, &Status{
@@ -479,6 +513,50 @@ func (e *Engine) deleteEntry(id string) error {
 	}
 	r.Items = out
 	return e.saveRegistry(r)
+}
+
+func (e *Engine) markCompleted(id string) error {
+	if e.db == nil {
+		return nil
+	}
+	return e.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("completed"))
+		if b == nil {
+			return nil
+		}
+		return b.Put([]byte(id), []byte{1})
+	})
+}
+
+func (e *Engine) isCompleted(id string) bool {
+	if e.db == nil {
+		return false
+	}
+	found := false
+	_ = e.db.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("completed"))
+		if b == nil {
+			return nil
+		}
+		if v := b.Get([]byte(id)); v != nil {
+			found = true
+		}
+		return nil
+	})
+	return found
+}
+
+func (e *Engine) markDeleted(id string) error {
+	if e.db == nil {
+		return nil
+	}
+	return e.db.Update(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("completed"))
+		if b == nil {
+			return nil
+		}
+		return b.Delete([]byte(id))
+	})
 }
 
 func (e *Engine) restore() {
