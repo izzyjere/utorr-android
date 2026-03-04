@@ -3,7 +3,7 @@ package zm.co.codelabs.utorr
 data class TorrentItem(
     val id: String,
     val name: String,
-    val progress: Float,
+    val progress: Double,
     val downloadSpeed: Long,
     val uploadSpeed: Long,
     val totalSize: Long,
