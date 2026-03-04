@@ -7,6 +7,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import utorr.Listener
@@ -84,7 +85,7 @@ class TorrentManager(
                     downloadedSize = s.downloaded,
                     status = mapStatus(s.state),
                     peers = s.peers.toInt(),
-                    seeds = 0, // Go engine may not supply seeds; keep 0 for now
+                    seeds = s.seeds.toInt(), // Go engine may not supply seeds; keep 0 for now
                     filePath = buildFilePath(s.savePath, name)
                 )
             }
@@ -119,15 +120,27 @@ class TorrentManager(
      * Add magnet.
      */
     fun addMagnet(uri: String) {
-        engine.addMagnet(uri)
+        scope.launch {
+            try {
+                engine.addMagnet(uri)
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error adding magnet", e)
+            }
+        }
     }
 
     /**
      * Add .torrent file.
      */
     fun addTorrentFile(file: File) {
-        val bytes = file.readBytes()
-        engine.addTorrentBytes(bytes)
+        scope.launch {
+            try {
+                val bytes = file.readBytes()
+                engine.addTorrentBytes(bytes)
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error adding torrent file", e)
+            }
+        }
     }
 
     fun pauseTorrent(id: String) {
@@ -161,13 +174,14 @@ class TorrentManager(
             "CHECKING" -> TorrentItem.Status.CHECKING
             "DOWNLOADING" -> TorrentItem.Status.DOWNLOADING
             "FINISHED" -> TorrentItem.Status.FINISHED
-            "SEEDING" -> TorrentItem.Status.FINISHED // you said no seeding; map anyway
+            "SEEDING" -> TorrentItem.Status.FINISHED
             else -> TorrentItem.Status.QUEUED
         }
 
     private fun buildFilePath(savePath: String?, name: String): String {
-        // Go engine uses rootDir as savePath base; actual layout is typically <rootDir>/<torrentName>/...
+        // Go engine uses rootDir as savePath base;
         val base = savePath?.takeIf { it.isNotBlank() } ?: rootDir.absolutePath
-        return base + File.separator + name
+        val file = File(base, name)
+        return file.absolutePath
     }
 }

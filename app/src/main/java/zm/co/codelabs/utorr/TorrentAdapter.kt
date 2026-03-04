@@ -7,10 +7,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import zm.co.codelabs.utorr.databinding.ItemTorrentBinding
+import kotlin.math.log10
 
 class TorrentAdapter(
     private val onPauseResume: (TorrentItem) -> Unit,
-    private val onDelete: (TorrentItem) -> Unit
+    private val onDelete: (TorrentItem) -> Unit,
+    private val onOpen: (TorrentItem) -> Unit
 ) : ListAdapter<TorrentItem, TorrentAdapter.ViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -32,6 +34,10 @@ class TorrentAdapter(
             binding.torrentStats.text = "${item.progress.toInt()}% • $sizeText • $speedText"
             binding.torrentPeers.text = "Peers: ${item.peers}(${item.seeds})"
 
+            val isFinished = item.status == TorrentItem.Status.FINISHED
+            binding.btnPauseResume.visibility = if (isFinished) android.view.View.GONE else android.view.View.VISIBLE
+            binding.btnOpen.visibility = if (isFinished) android.view.View.VISIBLE else android.view.View.GONE
+
             binding.btnPauseResume.text = if (item.status == TorrentItem.Status.PAUSED) "Resume" else "Pause"
             binding.btnPauseResume.setIconResource(
                 if (item.status == TorrentItem.Status.PAUSED) android.R.drawable.ic_media_play 
@@ -40,19 +46,20 @@ class TorrentAdapter(
 
             binding.btnPauseResume.setOnClickListener { onPauseResume(item) }
             binding.btnDelete.setOnClickListener { onDelete(item) }
+            binding.btnOpen.setOnClickListener { onOpen(item) }
         }
 
     private fun formatSpeed(bytesPerSecond: Long): String {
             if (bytesPerSecond <= 0) return "0 B/s"
             val units = arrayOf("B/s", "KB/s", "MB/s", "GB/s")
-            val i = (Math.log10(bytesPerSecond.toDouble()) / Math.log10(1024.0)).toInt().coerceIn(0, units.size - 1)
+            val i = (log10(bytesPerSecond.toDouble()) / log10(1024.0)).toInt().coerceIn(0, units.size - 1)
             return String.format("%.1f %s", bytesPerSecond / Math.pow(1024.0, i.toDouble()), units[i])
         }
 
         private fun formatSize(bytes: Long): String {
             if (bytes <= 0) return "0 B"
             val units = arrayOf("B", "KB", "MB", "GB", "TB")
-            val i = (Math.log10(bytes.toDouble()) / Math.log10(1024.0)).toInt().coerceIn(0, units.size - 1)
+            val i = (log10(bytes.toDouble()) / log10(1024.0)).toInt().coerceIn(0, units.size - 1)
             return String.format("%.1f %s", bytes / Math.pow(1024.0, i.toDouble()), units[i])
         }
     }

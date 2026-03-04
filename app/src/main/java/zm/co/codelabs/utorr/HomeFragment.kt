@@ -64,7 +64,49 @@ class HomeFragment : Fragment() {
                 else torrentService?.pauseTorrent(item.id)
             },
             onDelete = { item ->
-                torrentService?.removeTorrent(item.id)
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Remove Torrent")
+                    .setMessage("Are you sure you want to remove '${item.name}'?")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Remove") { _, _ ->
+                        torrentService?.removeTorrent(item.id)
+                    }
+                    .show()
+            },
+            onOpen = { item ->
+                item.filePath?.let { path ->
+                    val file = File(path)
+                    if (file.exists()) {
+                        val folder = if (file.isDirectory) file else file.parentFile
+                        folder?.let { f ->
+                            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                                setDataAndType(Uri.fromFile(f), "*/*")
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                            }
+                            try {
+                                startActivity(intent)
+                            } catch (e: Exception) {
+                                // Fallback to ACTION_VIEW if ACTION_GET_CONTENT fails or if strict mode blocks file://
+                                try {
+                                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                                        requireContext(),
+                                        "${requireContext().packageName}.fileprovider",
+                                        f
+                                    )
+                                    val fallback = Intent(Intent.ACTION_VIEW).apply {
+                                        setDataAndType(uri, "vnd.android.document/directory")
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    startActivity(fallback)
+                                } catch (ex: Exception) {
+                                    android.widget.Toast.makeText(requireContext(), "No file manager found", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    } else {
+                        android.widget.Toast.makeText(requireContext(), "Folder not found", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         )
         binding.recyclerView.adapter = adapter

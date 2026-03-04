@@ -88,6 +88,16 @@
                 android:text="Pause" />
 
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_open"
+                style="@style/Widget.Material3.Button.TextButton.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Open"
+                android:visibility="gone"
+                app:icon="@android:drawable/ic_menu_view"
+                tools:visibility="visible" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_delete"
                 style="@style/Widget.Material3.Button.TextButton.Icon"
                 android:layout_width="wrap_content"
