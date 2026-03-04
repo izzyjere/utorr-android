@@ -8,12 +8,12 @@
         android:title="@string/action_pause_all"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/SettingsFragment"
         android:orderInCategory="100"
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_about"
+        android:id="@+id/AboutFragment"
         android:orderInCategory="101"
         android:title="@string/action_about"
         app:showAsAction="never" />

@@ -9,11 +9,13 @@ import android.os.Environment
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 
 class TorrentService : Service() {
 
     private val binder = LocalBinder()
     private lateinit var torrentManager: TorrentManager
+    private lateinit var settingsManager: SettingsManager
 
     inner class LocalBinder : Binder() {
         fun getService(): TorrentService = this@TorrentService
@@ -22,6 +24,7 @@ class TorrentService : Service() {
     override fun onCreate() {
         super.onCreate()
         torrentManager = TorrentManager(this)
+        settingsManager = SettingsManager(this)
         startForegroundService()
     }
 
@@ -51,11 +54,13 @@ class TorrentService : Service() {
     fun getTorrents(): StateFlow<List<TorrentItem>> = torrentManager.torrents
 
     fun addMagnet(uri: String) {
-        torrentManager.addMagnet(uri, getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir)
+        val saveDir = File(settingsManager.downloadPath)
+        torrentManager.addMagnet(uri, saveDir)
     }
 
     fun addTorrentFile(file: java.io.File) {
-        torrentManager.addTorrentFile(file, getExternalFilesDir(null) ?: filesDir)
+        val saveDir = File(settingsManager.downloadPath)
+        torrentManager.addTorrentFile(file, saveDir)
     }
 
     fun pauseTorrent(id: String) = torrentManager.pauseTorrent(id)

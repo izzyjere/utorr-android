@@ -79,30 +79,32 @@ class TorrentManager(private val context: Context) {
     }
 
     fun pauseTorrent(id: String) {
-        handles[id]?.pause()
+        handles[id]?.let { if (it.isValid) it.pause() }
     }
 
     fun resumeTorrent(id: String) {
-        handles[id]?.resume()
+        handles[id]?.let { if (it.isValid) it.resume() }
     }
 
     fun pauseAll() {
-        handles.values.forEach { it.pause() }
+        handles.values.forEach { if (it.isValid) it.pause() }
     }
 
     fun resumeAll() {
-        handles.values.forEach { it.resume() }
+        handles.values.forEach { if (it.isValid) it.resume() }
     }
 
     fun removeTorrent(id: String, deleteFiles: Boolean) {
         handles[id]?.let { handle ->
-            val flags = if (deleteFiles) remove_flags_t.from_int(1) else remove_flags_t()
-            sessionManager.remove(handle, flags)
+            if (handle.isValid) {
+                val flags = if (deleteFiles) remove_flags_t.from_int(1) else remove_flags_t()
+                sessionManager.remove(handle, flags)
+            }
         }
     }
 
     private fun updateTorrentList() {
-        val items = handles.values.map { handle ->
+        val items = handles.values.filter { it.isValid }.map { handle ->
             val status = handle.status()
             val infoHashString = handle.infoHash().toString()
             val name = status.name() ?: "Unknown"

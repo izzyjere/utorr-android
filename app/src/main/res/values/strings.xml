@@ -55,10 +55,19 @@
     <string name="max_active_downloads">Max Active Downloads</string>
     <string name="enable_notifications">Enable Notifications</string>
     <string name="general_settings">General Settings</string>
+    <string name="theme_settings">Theme</string>
+    <string name="theme_system">System Default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="select_theme">Select Theme</string>
+    <string name="select_download_directory">Select Download Directory</string>
 
     <!-- About -->
     <string name="about_title">Utorr Downloader</string>
     <string name="about_version">Version 1.0.0</string>
     <string name="about_developer">Developed by Codelabs</string>
     <string name="about_description">A simple and fast torrent downloader for Android.</string>
+    <string name="home_tab_text">Home</string>
+    <string name="settings_tab_text">Settings</string>
+    <string name="about_tab_text">About</string>
 </resources>

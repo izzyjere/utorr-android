@@ -9,9 +9,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.*
 import android.view.Menu
 import android.view.MenuItem
 import zm.co.codelabs.utorr.databinding.ActivityMainBinding
@@ -32,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        SettingsManager(this).applyTheme()
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -40,14 +39,21 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
 
         val navController = findNavController(R.id.nav_host_fragment_content_main)
-        appBarConfiguration = AppBarConfiguration(navController.graph)
+        appBarConfiguration = AppBarConfiguration(setOf(R.id.HomeFragment, R.id.SettingsFragment, R.id.AboutFragment))
         setupActionBarWithNavController(navController, appBarConfiguration)
+        binding.bottomNav.setupWithNavController(navController)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
+            val topLevelDestinations = setOf(R.id.HomeFragment, R.id.SettingsFragment, R.id.AboutFragment)
             if (destination.id == R.id.HomeFragment) {
                 binding.fab.show()
             } else {
                 binding.fab.hide()
+            }
+            binding.bottomNav.visibility = if (destination.id in topLevelDestinations) {
+                android.view.View.VISIBLE
+            } else {
+                android.view.View.GONE
             }
         }
 
@@ -92,31 +98,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main)
-        val firstFragment = navHostFragment?.childFragmentManager?.fragments?.find { it is HomeFragment } as? HomeFragment
+        val homeFragment = navHostFragment?.childFragmentManager?.fragments?.find { it is HomeFragment } as? HomeFragment
 
         return when (item.itemId) {
             R.id.action_pause_all -> {
                 if (isAnyTorrentRunning) {
-                    firstFragment?.pauseAll()
+                    homeFragment?.pauseAll()
                 } else {
-                    firstFragment?.resumeAll()
+                    homeFragment?.resumeAll()
                 }
                 true
             }
-            R.id.action_settings -> {
-                navController.navigate(R.id.SettingsFragment)
-                true
-            }
-            R.id.action_about -> {
-                navController.navigate(R.id.AboutFragment)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+            else -> item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
         }
     }
 
