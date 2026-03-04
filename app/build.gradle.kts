@@ -1,15 +1,30 @@
 import org.gradle.api.internal.project.ProjectInternal
 import org.gradle.process.internal.ExecActionFactory
 import java.io.ByteArrayOutputStream
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
-
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) {
+        load(FileInputStream(keystorePropsFile))
+    }
+}
 android {
     namespace = "zm.co.codelabs.utorr"
     compileSdk = 36
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystoreProps["storeFile"] as String)
+            storePassword = keystoreProps["storePassword"] as String
+            keyAlias = keystoreProps["keyAlias"] as String
+            keyPassword = keystoreProps["keyPassword"] as String
+        }
+    }
 
     defaultConfig {
         applicationId = "zm.co.codelabs.utorr"
@@ -29,6 +44,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
