@@ -48,34 +48,52 @@ class TorrentManager(
 
     // Keep IDs we've seen, mostly useful for quick existence checks/UI actions
     private val ids = ConcurrentHashMap<String, Boolean>()
+    private val orderedIds = ArrayList<String>()
 
     private val engine = utorr.Utorr.newEngine()
 
     private val listener = object : Listener {
         override fun onAdded(id: String?, name: String?) {
             if (id.isNullOrBlank()) return
-            ids[id] = true
+            if (!ids.containsKey(id)) {
+                ids[id] = true
+                synchronized(orderedIds) {
+                    if (!orderedIds.contains(id)) {
+                        orderedIds.add(id)
+                    }
+                }
+            }
             // We don't update the list here; OnStatus is the source of truth and arrives every tick.
         }
 
         override fun onRemoved(id: String?) {
             if (id.isNullOrBlank()) return
             ids.remove(id)
+            synchronized(orderedIds) {
+                orderedIds.remove(id)
+            }
         }
 
         override fun onStatus(list: StatusList?) {
             if (list == null) return
 
-            val items = ArrayList<TorrentItem>(list.len().toInt())
+            val statusMap = HashMap<String, TorrentItem>()
             for (i in 0 until list.len()) {
                 val s = list.get(i) ?: continue
-
                 val id = s.id ?: continue
-                ids[id] = true
+                
+                if (!ids.containsKey(id)) {
+                    ids[id] = true
+                    synchronized(orderedIds) {
+                        if (!orderedIds.contains(id)) {
+                            orderedIds.add(id)
+                        }
+                    }
+                }
 
                 val name: String = s.name ?: "Unknown"
 
-                items += TorrentItem(
+                statusMap[id] = TorrentItem(
                     id = id,
                     name = name,
                     progress = s.progress, // already 0..100 from Go
@@ -88,6 +106,10 @@ class TorrentManager(
                     seeds = s.seeds.toInt(), // Go engine may not supply seeds; keep 0 for now
                     filePath = buildFilePath(s.savePath, name)
                 )
+            }
+
+            val items = synchronized(orderedIds) {
+                orderedIds.mapNotNull { statusMap[it] }
             }
 
             _torrents.value = items
@@ -107,13 +129,19 @@ class TorrentManager(
 
 
         // Start Go engine. It will restore torrents on startup and begin status ticks.
-        engine.start(
-            rootDir.absolutePath,
-            sessionDir.absolutePath,
-            maxConns.toLong(),
-            listener,
-            debug
-        )
+        scope.launch {
+            try {
+                engine.start(
+                    rootDir.absolutePath,
+                    sessionDir.absolutePath,
+                    maxConns.toLong(),
+                    listener,
+                    debug
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error starting engine", e)
+            }
+        }
     }
 
     /**
@@ -144,28 +172,65 @@ class TorrentManager(
     }
 
     fun pauseTorrent(id: String) {
-        engine.pause(id)
+        scope.launch {
+            try {
+                engine.pause(id)
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error pausing torrent", e)
+            }
+        }
     }
 
     fun resumeTorrent(id: String) {
-        engine.resume(id)
+        scope.launch {
+            try {
+                engine.resume(id)
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error resuming torrent", e)
+            }
+        }
     }
 
     fun pauseAll() {
-        engine.pauseAll()
+        scope.launch {
+            try {
+                engine.pauseAll()
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error pausing all", e)
+            }
+        }
     }
 
     fun resumeAll() {
-        engine.resumeAll()
+        scope.launch {
+            try {
+                engine.resumeAll()
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error resuming all", e)
+            }
+        }
     }
 
     fun removeTorrent(id: String, deleteFiles: Boolean) {
-        engine.remove(id, deleteFiles)
+        scope.launch {
+            try {
+                engine.remove(id, deleteFiles)
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error removing torrent", e)
+            }
+        }
     }
 
     fun stop() {
-        engine.stop()
-        scope.cancel()
+        scope.launch {
+            try {
+                engine.stop()
+            } catch (e: Exception) {
+                android.util.Log.e("TorrentManager", "Error stopping engine", e)
+            } finally {
+                scope.cancel()
+            }
+        }
     }
 
     private fun mapStatus(state: String?): TorrentItem.Status =

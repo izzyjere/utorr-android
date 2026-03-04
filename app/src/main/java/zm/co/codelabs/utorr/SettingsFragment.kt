@@ -50,6 +50,10 @@ class SettingsFragment : Fragment() {
         binding.btnTheme.setOnClickListener {
             showThemeSelectionDialog()
         }
+
+        binding.btnMaxConnections.setOnClickListener {
+            showMaxConnectionsDialog()
+        }
     }
 
     private fun updateUI() {
@@ -59,6 +63,22 @@ class SettingsFragment : Fragment() {
             SettingsManager.THEME_DARK -> getString(R.string.theme_dark)
             else -> getString(R.string.theme_system)
         }
+        binding.tvMaxConnections.text = settingsManager.maxConns.toString()
+    }
+
+    private fun showMaxConnectionsDialog() {
+        val options = arrayOf("20", "40", "60", "80", "100", "150", "200")
+        val current = settingsManager.maxConns.toString()
+        val checkedItem = options.indexOf(current).let { if (it == -1) 3 else it } // Default to 80 if not found
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.select_max_connections)
+            .setSingleChoiceItems(options, checkedItem) { dialog, which ->
+                settingsManager.maxConns = options[which].toInt()
+                updateUI()
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun showThemeSelectionDialog() {

@@ -70,4 +70,7 @@
     <string name="home_tab_text">Home</string>
     <string name="settings_tab_text">Settings</string>
     <string name="about_tab_text">About</string>
+    <string name="max_connections">Max Connections</string>
+    <string name="max_connections_summary">Maximum number of peer connections</string>
+    <string name="select_max_connections">Select Max Connections</string>
 </resources>

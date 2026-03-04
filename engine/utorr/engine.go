@@ -107,6 +107,7 @@ func (e *Engine) Start(rootDir, sessionDir string, maxConns int, l Listener, deb
 	cfg.HalfOpenConnsPerTorrent = 8
 	cfg.EstablishedConnsPerTorrent = maxConns
 	cfg.AcceptPeerConnections = true
+	cfg.NoDefaultPortForwarding = true
 
 	// Resume persistence
 	pc, err := storage.NewBoltPieceCompletion(sessionDir)

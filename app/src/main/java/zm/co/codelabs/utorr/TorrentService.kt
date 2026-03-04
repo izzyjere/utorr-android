@@ -26,7 +26,8 @@ class TorrentService : Service() {
         super.onCreate()
         settingsManager = SettingsManager(this)
         val saveDir = File(settingsManager.downloadPath)
-        torrentManager = TorrentManager(this, rootDir = saveDir)
+        val maxConns = settingsManager.maxConns
+        torrentManager = TorrentManager(this, rootDir = saveDir, maxConns = maxConns)
         startForegroundService()
     }
 

@@ -26,6 +26,10 @@ class SettingsManager(context: Context) {
         get() = prefs.getInt(KEY_THEME, THEME_SYSTEM)
         set(value) = prefs.edit { putInt(KEY_THEME, value) }
 
+    var maxConns: Int
+        get() = prefs.getInt("max_conns", 80)
+        set(value) = prefs.edit { putInt("max_conns", value) }
+
     private fun getDefaultDownloadPath(): String {
         return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
     }
