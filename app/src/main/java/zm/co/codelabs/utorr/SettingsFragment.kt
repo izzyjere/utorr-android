@@ -20,9 +20,6 @@ class SettingsFragment : Fragment() {
     private val selectDirLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         uri?.let {
             val path = it.path ?: return@let
-            // Note: In a real app, you'd need to convert the content URI to a file path
-            // or use document-based file access. For simplicity here, we use the URI string
-            // or a placeholder if path is not simple. 
             // Better to keep it as URI if possible but TorrentManager uses File.
             // For now, let's just use the URI as a representation.
             settingsManager.downloadPath = it.toString()
