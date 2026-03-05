@@ -45,7 +45,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/torrent_name"
-            tools:progress="45" />
+            tools:progress="45"
+            android:indeterminate="false" />
 
         <TextView
             android:id="@+id/torrent_stats"
